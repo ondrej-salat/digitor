@@ -1,8 +1,4 @@
-> [!WARNING]
-> **Tento repositář byl archivován.**
-> Ve vývoji tohoto programu budu pokračovat v mém osobním repositáři <a href="https://github.com/ondrej-salat/digitor">https://github.com/ondrej-salat/digitor</a>
-
-# Digitor [<i><a href="https://gyarab.github.io/2023-4e-salat-digitor/main.pdf">Online PDF dokumentace</a></i>]
+# Digitor
 
 Tento projekt slouží k vytváření a trénování jednoduchých (plně propojených) neuronových sítí. Konkrétní
 model `digitor.json`
