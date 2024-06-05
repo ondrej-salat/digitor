@@ -1,11 +1,12 @@
-#include "NeuralNetwork.h"
+//#include "NeuralNetwork.h"
+#include "matrixor.h"
 #include "iostream"
 #include "TrainData.h"
 #include<bits/stdc++.h>
 
 using namespace std;
 
-NeuralNetwork *n = nullptr;
+/*NeuralNetwork *n = nullptr;
 bool train = false; // -t
 
 void signalHandler(int signal) {
@@ -17,7 +18,7 @@ void signalHandler(int signal) {
         delete n;
         exit(130);
     }
-}
+}*/
 
 
 static void printVector(vector<double> v) {
@@ -41,8 +42,19 @@ static vector<unsigned int> charArrToVector(const char *input) {
     return values;
 }
 
+int main() {
+    std::vector<std::vector<double>> a = {{1, 2, 3},
+                                          {4, 5, 6},
+                                          {7, 8, 9},
+    };
+    std::vector<std::vector<double>> b = {{1, 1, 1}, {1,1,1}, {1,1,1}};
+    matrixor A = matrixor(a);
+    matrixor B = matrixor(b);
+    A.multiply(B);
+    A.print();
+}
 
-int main(int argc, char *argv[]) {
+/*int main(int argc, char *argv[]) {
 
     std::signal(SIGINT, signalHandler);
 
@@ -152,13 +164,10 @@ int main(int argc, char *argv[]) {
                 cin >> input[i];
             }
             vector<double> output = n->feed(input);
-            //printVector(output);
             unsigned int estimation = max_element(output.begin(), output.end()) - output.begin();
-            /*cout << estimation << " -> " << std::fixed << std::setprecision(2) << output[estimation] * 100 << "%"
-                 << endl;*/
             cout << estimation << endl;
         }
     }
     return 0;
-}
+}*/
 
