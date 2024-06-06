@@ -1,4 +1,4 @@
-//#include "NeuralNetwork.h"
+#include "NeuralNetwork.h"
 #include "matrixor.h"
 #include "iostream"
 #include "TrainData.h"
@@ -6,7 +6,7 @@
 
 using namespace std;
 
-/*NeuralNetwork *n = nullptr;
+NeuralNetwork *n = nullptr;
 bool train = false; // -t
 
 void signalHandler(int signal) {
@@ -18,7 +18,7 @@ void signalHandler(int signal) {
         delete n;
         exit(130);
     }
-}*/
+}
 
 
 static void printVector(vector<double> v) {
@@ -42,19 +42,34 @@ static vector<unsigned int> charArrToVector(const char *input) {
     return values;
 }
 
-int main() {
-    std::vector<std::vector<double>> a = {{1, 2, 3},
+/*int main() {
+    std::vector<std::vector<double>> n = {{1, 2, 3},
+                                          {4, 5, 6},
+    };
+    std::vector<std::vector<double>> rn = {{1, 2, 3},
+                                           {4, 5, 6},
+                                           {7, 8, 9},
+    };
+    std::vector<std::vector<double>> b = {{1, 2, 3},
                                           {4, 5, 6},
                                           {7, 8, 9},
     };
-    std::vector<std::vector<double>> b = {{1, 1, 1}, {1,1,1}, {1,1,1}};
-    matrixor A = matrixor(a);
+    std::vector<std::vector<std::vector<double>>> w = {{{1, 1, 1},
+                                                               {1, 1, 1},
+                                                               {1, 1, 1}},
+                                                       {{1, 1, 1},
+                                                               {1, 1, 1},
+                                                               {1, 1, 1}}};
+    matrixor A = matrixor(b);
     matrixor B = matrixor(b);
     A.multiply(B);
     A.print();
-}
 
-/*int main(int argc, char *argv[]) {
+    NeuralNetwork nt = NeuralNetwork({2, 1000, 1000, 10}, "sigmoid");
+    printVector(nt.feed({10, 10}));
+}*/
+
+int main(int argc, char *argv[]) {
 
     std::signal(SIGINT, signalHandler);
 
@@ -169,5 +184,4 @@ int main() {
         }
     }
     return 0;
-}*/
-
+}

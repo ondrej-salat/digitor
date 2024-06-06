@@ -6,20 +6,17 @@
 
 class matrixor {
 public:
-    explicit matrixor(std::vector<std::vector<double>> &matrix);
+    explicit matrixor();
 
-    void copy(matrixor &other);
+    void feedForwardCalculation(std::vector<std::vector<double>> &n, std::vector<std::vector<double>> &rN,
+                                std::vector<std::vector<std::vector<double>>> &w,
+                                std::vector<std::vector<double>> &b);
 
-    void destroy();
 
     void multiply(matrixor &other);
 
-    void print() const;
-
-    double *data;
-    unsigned int rows;
-    unsigned int cols;
 private:
+    int init;
 };
 
 #endif //MATRIXOR_MATRIXOR_H

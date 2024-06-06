@@ -94,14 +94,8 @@ void NeuralNetwork::feedForward() {
             rawNeuron[i][j] = 0;
         }
     }
-    for (int i = 1; i < neuron.size(); ++i) {
-        for (int j = 0; j < neuron[i].size(); ++j) {
-            for (int k = 0; k < neuron[i - 1].size(); ++k) {
-                rawNeuron[i][j] += weight[i - 1][j][k] * neuron[i - 1][k];
-            }
-            neuron[i][j] = activationFn(rawNeuron[i][j] + bias[i][j]);
-        }
-    }
+    auto m = matrixor();
+    m.feedForwardCalculation(neuron, rawNeuron, weight, bias);
 }
 
 void NeuralNetwork::train(const std::vector<std::vector<TrainData>> &data, unsigned int iterations,

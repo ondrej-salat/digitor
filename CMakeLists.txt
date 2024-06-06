@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.28)
 project(digitor)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -12,7 +12,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(nlohmann_json)
 
+find_package(CUDAToolkit REQUIRED)
 
+enable_language(CUDA)
+
+
+set(CMAKE_CUDA_ARCHITECTURES native)  # Deprecated
+
+set_source_files_properties(main.cpp PROPERTIES LANGUAGE CUDA)
 add_executable(digitor src/main.cpp
         src/NeuralNetwork.cpp
         src/NeuralNetwork.h
