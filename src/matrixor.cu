@@ -1,78 +1,84 @@
 #include "matrixor.h"
 
 #include <iostream>
+#include <vector>
 
 
-__global__ void matrixMultiplicationKernel(double *a, double *b, double *c, int m, int n, int k) {
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    double sum = 0;
-    if (col < k && row < m) {
-        for (int i = 0; i < n; i++) {
-            sum += a[row * n + i] * b[i * k + col];
+__global__ void
+feedForwardKernel(double *device_neuron, double *device_weight, double *device_bias, double *device_result,
+                  double *device_resultA, int rows, int cols) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (i < cols && j < rows) {
+        double sum = 0.0;
+        for (int k = 0; k < cols; ++k) {
+            sum += device_weight[j * rows + k] * device_neuron[k];
         }
-        c[row * k + col] = sum;
+        device_result[j] = sum + device_bias[j];
+        device_resultA[j] = (1.0 / (1.0 + exp(-(double) device_result[j])));
     }
 }
 
-matrixor::matrixor(std::vector<std::vector<double>> &matrix) {
-    rows = matrix.size();
-    cols = matrix[0].size();
-    data = (double *) malloc(sizeof(double) * rows * cols);
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            data[i * cols + j] = matrix[i][j];
+matrixor::matrixor() {
+    init = 1;
+}
+
+
+void matrixor::feedForwardCalculation(std::vector<std::vector<double>> &n, std::vector<std::vector<double>> &rN,
+                                      std::vector<std::vector<std::vector<double>>> &w,
+                                      std::vector<std::vector<double>> &b) {
+    for (int i = 1; i < n.size(); ++i) {
+        double *neuron = (double *) malloc(sizeof(double) * n[i - 1].size());
+        double *weights = (double *) malloc(sizeof(double) * w[i - 1].size() * w[i - 1][0].size());
+        double *bias = (double *) malloc(sizeof(double) * b[i].size());
+        double *result = (double *) malloc(sizeof(double) * n[i].size());
+        double *resultA = (double *) malloc(sizeof(double) * n[i].size());
+        double *device_n, *device_w, *device_b, *device_result, *device_resultA;
+        int rows = w[i - 1][0].size();
+        int cols = n[i - 1].size();
+        cudaMalloc(&device_n,
+                   sizeof(double) * n[i - 1].size());
+        cudaMalloc(&device_w, sizeof(double) * w[i - 1].size() * w[i - 1][0].size());
+        cudaMalloc(&device_b, sizeof(double) * b[i].size());
+        cudaMalloc(&device_result, sizeof(double) * n[i].size());
+        cudaMalloc(&device_resultA, sizeof(double) * n[i].size());
+
+        for (int j = 0; j < n[i - 1].size(); ++j) {
+            neuron[j] = n[i - 1][j];
+        }
+        for (int j = 0; j < b[i].size(); ++j) {
+            bias[j] = b[i][j];
+        }
+        for (int j = 0; j < w[i - 1].size(); ++j) {
+            for (int k = 0; k < w[i - 1][j].size(); ++k) {
+                weights[j * w[i - 1][j].size() + k] = w[i - 1][j][k];
+            }
+        }
+        cudaMemcpy(device_n, neuron, sizeof(double) * n[i - 1].size(), cudaMemcpyHostToDevice);
+        cudaMemcpy(device_w, weights, sizeof(double) * w[i - 1].size() * w[i - 1][0].size(), cudaMemcpyHostToDevice);
+        cudaMemcpy(device_b, bias, sizeof(double) * b[i].size(), cudaMemcpyHostToDevice);
+        cudaMemcpy(device_result, result, sizeof(double) * n[i].size(), cudaMemcpyHostToDevice);
+        cudaMemcpy(device_resultA, resultA, sizeof(double) * n[i].size(), cudaMemcpyHostToDevice);
+
+        int BLOCK_SIZE = 32;
+        unsigned int grid_rows = (w[i - 1].size() + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        unsigned int grid_cols = (n[i - 1].size() + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        dim3 dimGrid(grid_cols, grid_rows);
+        dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+
+        feedForwardKernel<<<dimGrid, dimBlock>>>(device_n, device_w, device_b, device_result, device_resultA, rows,
+                                                 cols);
+        cudaMemcpy(result, device_result, sizeof(double) * n[i].size(), cudaMemcpyDeviceToHost);
+        cudaMemcpy(resultA, device_resultA, sizeof(double) * n[i].size(), cudaMemcpyDeviceToHost);
+
+        cudaDeviceSynchronize();
+        for (int j = 0; j < n[i].size(); ++j) {
+            rN[i][j] = result[j];
+            n[i][j] = resultA[j];
         }
     }
 }
 
-void matrixor::destroy() {
-    free(data);
-    rows = 0;
-    cols = 0;
-}
-
-void matrixor::copy(matrixor &other) {
-    data = other.data;
-    rows = other.rows;
-    cols = other.cols;
-}
-
-void matrixor::multiply(matrixor &other) {
-    int m = rows;
-    int n = cols;
-    int k = other.rows;
-
-    double *device_A, *device_B, *device_result;
-    cudaMalloc(&device_A, sizeof(double) * m * n);
-    cudaMalloc(&device_B, sizeof(double) * n * k);
-    cudaMalloc(&device_result, sizeof(double) * m * k);
-
-    cudaMemcpy(device_A, data, sizeof(double) * m * n, cudaMemcpyHostToDevice);
-    cudaMemcpy(device_B, other.data, sizeof(double) * n * k, cudaMemcpyHostToDevice);
-
-    int BLOCK_SIZE = 16;
-    unsigned int grid_rows = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    unsigned int grid_cols = (k + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    dim3 dimGrid(grid_cols, grid_rows);
-    dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-
-    matrixMultiplicationKernel<<<dimGrid, dimBlock>>>(device_A, device_B, device_result, m, n, k);
-    cudaMemcpy(data, device_result, sizeof(double) * m * k, cudaMemcpyDeviceToHost);
-    cudaDeviceSynchronize();
-    cudaFree(device_A);
-    cudaFree(device_B);
-    cudaFree(device_result);
-    rows = m;
-    cols = k;
-}
 
 
-void matrixor::print() const {
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            std::cout << data[i * cols + j] << " ";
-        }
-        std::cout << "\n";
-    }
-}
