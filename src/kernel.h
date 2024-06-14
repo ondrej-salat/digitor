@@ -64,7 +64,7 @@ class kernel {
 public:
     void doFeedForward(Network &network);
 
-    void initNetwork(Network &network);
+    void initNetwork(Network &network, int seed);
 
     void doTraining(Network &network, TrainData data, double learningRate);
 

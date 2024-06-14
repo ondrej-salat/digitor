@@ -14,12 +14,12 @@ feedKernel(const double *pN, const double *b, const double *w, double *r, double
     r[id] = (1.0 / (1.0 + exp(-(double) rR[id])));
 }
 
-__global__ void initRandom(double *b, double *w, int rows, int cols) {
+__global__ void initRandom(double *b, double *w, int rows, int cols, int seed) {
     unsigned int id = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (id >= rows) return;
     curandState state;
-    curand_init(1234, id, 0, &state);
+    curand_init(seed, id, 0, &state);
     for (int i = 0; i < cols; ++i) {
         w[id * cols + i] = curand_uniform(&state) * 2.0 - 1.0;
     }
@@ -57,7 +57,7 @@ void kernel::doFeedForward(Network &network) {
 }
 
 
-void kernel::initNetwork(Network &network) {
+void kernel::initNetwork(Network &network, int seed) {
     for (int i = 1; i < network.network_size; ++i) {
         Layer layer = network.layer[i];
         double *d_b, *d_w;
@@ -65,10 +65,13 @@ void kernel::initNetwork(Network &network) {
         cudaMalloc(&d_w, sizeof(double) * layer.neurons * layer.prevNeurons);
         unsigned int BLOCK_SIZE = 256;
         unsigned int GRID_SIZE = (layer.neurons * layer.prevNeurons + BLOCK_SIZE - 1) / BLOCK_SIZE;
-        initRandom<<<GRID_SIZE, BLOCK_SIZE>>>(d_b, d_w, layer.prevNeurons, layer.neurons);
+        initRandom<<<GRID_SIZE, BLOCK_SIZE>>>(d_b, d_w, layer.prevNeurons, layer.neurons, seed);
         cudaDeviceSynchronize();
 
         cudaMemcpy(layer.bias, d_b, sizeof(double) * layer.neurons, cudaMemcpyDeviceToHost);
         cudaMemcpy(layer.weight, d_w, sizeof(double) * layer.neurons * layer.prevNeurons, cudaMemcpyDeviceToHost);
+
+        cudaFree(d_b);
+        cudaFree(d_w);
     }
 }

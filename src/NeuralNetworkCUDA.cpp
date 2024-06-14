@@ -39,7 +39,10 @@ void NeuralNetworkCUDA::feedForward() {
 
 void NeuralNetworkCUDA::initRandom() {
     kernel k;
-    k.initNetwork(network);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1000);
+    k.initNetwork(network, (int) dis(gen));
 }
 
 void NeuralNetworkCUDA::train(const TrainData &data, unsigned int iterations, double learningRate) {
