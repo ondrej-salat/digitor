@@ -45,14 +45,26 @@ static vector<unsigned int> charArrToVector(const char *input) {
 
 int main() {
     Layers l;
-    l.layer_size = 3;
+    l.layer_size = 4;
     l.allocateMemory();
-    l.layer[0] = 3;
-    l.layer[1] = 2;
-    l.layer[2] = 5;
+    l.layer[0] = 10;
+    l.layer[1] = 10;
+    l.layer[2] = 10;
+    l.layer[3] = 1;
     NeuralNetworkCUDA n = NeuralNetworkCUDA(l, SIGMOID);
-    std::vector<double> intput = {10, 10, 10};
+    std::cout << "init" << "\n";
+    std::vector<double> intput = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
     printVector(n.feed(intput));
+    TrainData data{};
+    data.data_size = 1;
+    data.set = 1;
+    data.allocateMemory();
+    data.image[0].value = 0;
+    data.image[0].image_size = 10;
+    data.image[0].allocateMemory();
+    for (int i = 0; i < 10; ++i) {
+        data.image[0].image[i] = 1;
+    }
 }
 
 /*int main(int argc, char *argv[]) {

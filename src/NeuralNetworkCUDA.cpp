@@ -53,6 +53,3 @@ void NeuralNetworkCUDA::initRandom() const {
         }
     }
 }
-
-
-

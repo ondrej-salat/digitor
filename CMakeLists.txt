@@ -18,14 +18,19 @@ enable_language(CUDA)
 
 
 set(CMAKE_CUDA_ARCHITECTURES native)  # Deprecated
+set(CUDA_SEPARABLE_COMPILATION ON)
 
 set_source_files_properties(main.cpp PROPERTIES LANGUAGE CUDA)
 add_executable(digitor src/main.cpp
-        src/NeuralNetwork.cpp
-        src/NeuralNetwork.h
+        #src/NeuralNetwork.cpp
+        #src/NeuralNetwork.h
         src/TrainData.h
         src/matrixor.cu
         src/matrixor.h
+        src/NeuralNetworkCUDA.cpp
+        src/NeuralNetworkCUDA.h
+        src/kernel.cu
+        src/kernel.h
 )
 
 target_link_libraries(digitor PRIVATE nlohmann_json)

@@ -8,7 +8,6 @@
 #include <vector>
 #include <random>
 #include <string>
-#include "TrainData.h"
 #include "kernel.h"
 
 
@@ -20,7 +19,6 @@ public:
 
     std::vector<double> feed(const std::vector<double> &input);
 
-    void train(const std::vector<std::vector<TrainData>> &data, unsigned int iterations, double learningRate);
 
 private:
     void feedForward();

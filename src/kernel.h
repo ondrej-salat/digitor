@@ -1,6 +1,8 @@
 #ifndef DIGITOR_KERNEL_H
 #define DIGITOR_KERNEL_H
 
+#include "TrainData.h"
+
 struct Layer {
     int neurons;
     int prevNeurons;
@@ -16,6 +18,7 @@ struct Layer {
         weight = new double[neurons * prevNeurons];
     }
 
+
     void freeMemory() const {
         delete[] neuron;
         delete[] rawNeuron;
@@ -23,6 +26,8 @@ struct Layer {
         delete[] weight;
     }
 };
+
+
 
 struct Network {
     int network_size;
@@ -36,6 +41,8 @@ struct Network {
         delete[] layer;
     }
 };
+
+
 
 struct Layers {
     int layer_size;
@@ -55,9 +62,11 @@ enum ActivationFn {
     RELU = 1
 };
 
-class kernel{
+class kernel {
 public:
     void doFeedForward(Network &network);
+
+    void doTraining(Network &network, TrainData data, double learningRate);
 
 };
 

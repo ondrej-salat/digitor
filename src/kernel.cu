@@ -1,9 +1,8 @@
 #include "kernel.h"
 
-
 __global__ void
-feedKernel(double *pN, const double *b, const double *w, double *r, double *rR, int rows, int cols) {
-    int id = blockIdx.x * blockDim.x + threadIdx.x;
+feedKernel(const double *pN, const double *b, const double *w, double *r, double *rR, int rows, int cols) {
+    unsigned int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < rows) {
         double sum = 0;
         for (int i = 0; i < cols; ++i) {
@@ -27,14 +26,19 @@ void kernel::doFeedForward(Network &network) {
         cudaMemcpy(d_pN, network.layer[i - 1].neuron, sizeof(double) * layer.prevNeurons, cudaMemcpyHostToDevice);
         cudaMemcpy(d_b, layer.bias, sizeof(double) * layer.neurons, cudaMemcpyHostToDevice);
         cudaMemcpy(d_w, layer.weight, sizeof(double) * layer.neurons * layer.prevNeurons, cudaMemcpyHostToDevice);
-        int BLOCK_SIZE = 32;
-        int GRID_SIZE = (layer.neurons * layer.prevNeurons + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        unsigned int BLOCK_SIZE = 256;
+        unsigned int GRID_SIZE = (layer.neurons * layer.prevNeurons + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
         feedKernel<<<GRID_SIZE, BLOCK_SIZE>>>(d_pN, d_b, d_w, d_r, d_rR, layer.neurons, layer.prevNeurons);
         cudaDeviceSynchronize();
 
         cudaMemcpy(layer.neuron, d_r, sizeof(double) * layer.neurons, cudaMemcpyDeviceToHost);
         cudaMemcpy(layer.rawNeuron, d_rR, sizeof(double) * layer.neurons, cudaMemcpyDeviceToHost);
-    }
 
+        cudaFree(d_r);
+        cudaFree(d_rR);
+        cudaFree(d_pN);
+        cudaFree(d_b);
+        cudaFree(d_w);
+    }
 }
