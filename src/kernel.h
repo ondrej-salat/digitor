@@ -28,7 +28,6 @@ struct Layer {
 };
 
 
-
 struct Network {
     int network_size;
     Layer *layer;
@@ -41,7 +40,6 @@ struct Network {
         delete[] layer;
     }
 };
-
 
 
 struct Layers {
@@ -66,7 +64,10 @@ class kernel {
 public:
     void doFeedForward(Network &network);
 
+    void initNetwork(Network &network);
+
     void doTraining(Network &network, TrainData data, double learningRate);
+
 
 };
 

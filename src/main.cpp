@@ -48,9 +48,9 @@ int main() {
     l.layer_size = 4;
     l.allocateMemory();
     l.layer[0] = 10;
-    l.layer[1] = 10;
-    l.layer[2] = 10;
-    l.layer[3] = 1;
+    l.layer[1] = 100;
+    l.layer[2] = 100;
+    l.layer[3] = 10;
     NeuralNetworkCUDA n = NeuralNetworkCUDA(l, SIGMOID);
     std::cout << "init" << "\n";
     std::vector<double> intput = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10};

@@ -37,19 +37,14 @@ void NeuralNetworkCUDA::feedForward() {
     k.doFeedForward(network);
 }
 
-void NeuralNetworkCUDA::initRandom() const {
-    for (int i = 1; i < network.network_size; ++i) {
-        for (int j = 0; j < network.layer[i].neurons; ++j) {
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::uniform_real_distribution<> dis(-0.1, 0.1);
-            network.layer[i].bias[j] = dis(gen);
-            for (int k = 0; k < network.layer[i].prevNeurons; ++k) {
-                std::random_device rd2;
-                std::mt19937 gen2(rd2());
-                std::uniform_real_distribution<> dis2(-1.0, 1.0);
-                network.layer[i].weight[j * network.layer[i].prevNeurons + k] = dis2(gen2);
-            }
-        }
+void NeuralNetworkCUDA::initRandom() {
+    kernel k;
+    k.initNetwork(network);
+}
+
+void NeuralNetworkCUDA::train(const TrainData &data, unsigned int iterations, double learningRate) {
+    for (int i = 0; i < iterations; ++i) {
+
+
     }
 }

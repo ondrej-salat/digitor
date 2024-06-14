@@ -19,38 +19,18 @@ public:
 
     std::vector<double> feed(const std::vector<double> &input);
 
+    void train(const TrainData &data, unsigned int iterations, double learningRate);
 
 private:
     void feedForward();
 
-    void backPropagate(std::vector<double> target,
-                       std::vector<std::vector<double>> relativeDeltaErrors,
-                       double learningRate,
-                       std::vector<std::vector<std::vector<double>>> &newWeights,
-                       std::vector<std::vector<double>> &newBiases
-    );
-
-    void initRandom() const;
-
-    void setActivationType(int v);
-
-    static double ReLU(double v);
-
-    static double sigmoid(double v);
-
-    [[nodiscard]] double activationFn(double v) const;
-
-    [[nodiscard]] double activationFnDerivative(double v) const;
+    void initRandom();
 
     int activationType{};
     std::string filename;
     Network network{};
 
     double calculateCost(unsigned int targetValue);
-
-    static double sigmoidDerivative(double v);
-
-    static double ReLUDerivative(double v);
 };
 
 
