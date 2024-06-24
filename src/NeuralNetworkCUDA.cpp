@@ -12,6 +12,7 @@ NeuralNetworkCUDA::NeuralNetworkCUDA(Layers layers, ActivationFn activationFn) {
         network.layer[i].prevNeurons = layers.layer[i - 1];
         network.layer[i].allocateMemory();
     }
+    network.activation = activationType;
     initRandom();
 }
 
@@ -47,7 +48,7 @@ void NeuralNetworkCUDA::initRandom() {
 
 void NeuralNetworkCUDA::train(const TrainData &data, unsigned int iterations, double learningRate) {
     for (int i = 0; i < iterations; ++i) {
-
-
+        kernel k;
+        k.doTraining(network, data, learningRate);
     }
 }

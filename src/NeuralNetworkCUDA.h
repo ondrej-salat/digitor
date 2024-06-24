@@ -1,7 +1,3 @@
-//
-// Created by ondrej on 12/06/24.
-//
-
 #ifndef DIGITOR_NEURALNETWORKCUDA_H
 #define DIGITOR_NEURALNETWORKCUDA_H
 
@@ -29,8 +25,6 @@ private:
     int activationType{};
     std::string filename;
     Network network{};
-
-    double calculateCost(unsigned int targetValue);
 };
 
 

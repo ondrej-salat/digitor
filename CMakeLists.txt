@@ -25,12 +25,11 @@ add_executable(digitor src/main.cpp
         #src/NeuralNetwork.cpp
         #src/NeuralNetwork.h
         src/TrainData.h
-        src/matrixor.cu
-        src/matrixor.h
         src/NeuralNetworkCUDA.cpp
         src/NeuralNetworkCUDA.h
         src/kernel.cu
         src/kernel.h
+        src/Network.h
 )
 
 target_link_libraries(digitor PRIVATE nlohmann_json)

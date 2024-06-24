@@ -5,7 +5,6 @@
 #include "string"
 #include "TrainData.h"
 #include "nlohmann/json.hpp"
-#include "matrixor.h"
 
 class NeuralNetwork {
 public:

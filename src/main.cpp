@@ -1,5 +1,4 @@
 //#include "NeuralNetwork.h"
-#include "matrixor.h"
 #include "iostream"
 #include "TrainData.h"
 #include<bits/stdc++.h>
@@ -45,30 +44,32 @@ static vector<unsigned int> charArrToVector(const char *input) {
 
 int main() {
     Layers l;
-    l.layer_size = 8;
+    l.layer_size = 4;
     l.allocateMemory();
-    l.layer[0] = 10;
-    l.layer[1] = 10000;
-    l.layer[2] = 10000;
-    l.layer[3] = 10000;
-    l.layer[4] = 10000;
-    l.layer[5] = 10000;
-    l.layer[6] = 10000;
-    l.layer[7] = 10;
+    l.layer[0] = 100;
+    l.layer[1] = 50;
+    l.layer[2] = 50;
+    l.layer[3] = 10;
     NeuralNetworkCUDA n = NeuralNetworkCUDA(l, SIGMOID);
     std::cout << "init" << "\n";
-    std::vector<double> intput = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
+    std::vector<double> intput = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                                  10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                                  10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                                  10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                                  10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
     printVector(n.feed(intput));
     TrainData data{};
     data.data_size = 1;
     data.set = 1;
     data.allocateMemory();
     data.image[0].value = 0;
-    data.image[0].image_size = 10;
+    data.image[0].image_size = 100;
     data.image[0].allocateMemory();
-    for (int i = 0; i < 10; ++i) {
-        data.image[0].image[i] = 1;
+    for (int i = 0; i < 100; ++i) {
+        data.image[0].image[i] = 10;
     }
+    n.train(data, 10000, 0.01);
+    printVector(n.feed(intput));
 }
 
 /*int main(int argc, char *argv[]) {

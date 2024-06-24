@@ -5,7 +5,6 @@
 #include "iostream"
 #include "TrainData.h"
 #include "nlohmann/json.hpp"
-#include "matrixor.h"
 
 using json = nlohmann::json;
 
