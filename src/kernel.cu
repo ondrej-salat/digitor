@@ -38,17 +38,17 @@ doBackpropagationKernel(const double *neuron, const double *rawNeuron, const dou
     unsigned int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id >= rows) return;
     if (last) {
-        deltaError[id] = 2 * (result[id] - neuron[id]);
+        deltaError[id] = 2 * (neuron[id] - result[id]);
         for (int i = 0; i < cols; ++i) {
             double localError = deltaError[id];
             if (fn == 0) {
                 double sig = (1.0 / (1.0 + exp(-(double) rawSource[i])));
                 localError *= sig * (1.0 - sig);
             } else if (fn == 1) {
-                localError *= (rawNeuron[i] >= 0 ? 1 : 0);
+                localError *= (rawSource[i] >= 0.0 ? 1.0 : 0.0);
             }
             weight[id * cols + i] -= learningRate * localError * source[i];
-            bias[id] -= learningRate * localError;
+            //bias[i] -= learningRate * localError;
         }
     } else {
         double sum = 0;
@@ -65,14 +65,14 @@ doBackpropagationKernel(const double *neuron, const double *rawNeuron, const dou
         deltaError[id] = sum;
         double localError = deltaError[id];
         if (fn == 0) {
-            double sig = (1.0 / (1.0 + exp(-(double) rawNeuron[id])));
+            double sig = (1.0 / (1.0 + exp(-(double) rawSource[id])));
             localError *= sig * (1.0 - sig);
         } else if (fn == 1) {
-            localError *= (rawNeuron[id] >= 0 ? 1 : 0);
+            localError *= (rawSource[id] >= 0 ? 1 : 0);
         }
         bias[id] -= learningRate * localError;
         for (int i = 0; i < cols; ++i) {
-            weight[id * cols + i] -= learningRate * localError * neuron[id];
+            weight[id * cols + i] -= learningRate * localError * source[i];
         }
     }
 
@@ -164,12 +164,19 @@ void kernel::doBackpropagation(Network &network, double learningRate, double *re
         cudaMemcpy(d_bias, layer.bias, sizeof(double) * layer.neurons, cudaMemcpyHostToDevice);
         cudaMemcpy(d_result, result, sizeof(double) * layer.neurons, cudaMemcpyHostToDevice);
 
-        unsigned int BLOCK_SIZE = 256;
-        unsigned int GRID_SIZE = (layer.neurons + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        unsigned int BLOCK_SIZE;
+        unsigned int GRID_SIZE;
+        if (layer.neurons > 512) {
+            BLOCK_SIZE = 512;
+            GRID_SIZE = (layer.neurons + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        } else {
+            BLOCK_SIZE = layer.neurons;
+            GRID_SIZE = 1;
+        }
         doBackpropagationKernel<<<GRID_SIZE, BLOCK_SIZE>>>(d_neuron, d_rawNeuron,
                                                            d_source, d_rawSource, d_weight, d_nextWeight,
                                                            d_bias, d_result, deltaError, deltaErrorNext,
-                                                           last, layer.prevNeurons, layer.neurons,
+                                                           last, layer.neurons, layer.prevNeurons,
                                                            network.activation, learningRate, nextNeurons);
         cudaDeviceSynchronize();
 
@@ -193,11 +200,11 @@ void kernel::doTraining(Network &network, TrainData data, double learningRate) {
         for (int j = 0; j < data.image[i].image_size; ++j) {
             network.layer[0].neuron[j] = data.image[i].image[j];
         }
+        this->doFeedForward(network);
         auto *result = new double[network.layer[network.network_size - 1].neurons];
         for (int j = 0; j < network.layer[network.network_size - 1].neurons; ++j) {
             result[j] = j == data.image[i].value;
         }
-        this->doFeedForward(network);
         this->doBackpropagation(network, learningRate, result);
     }
 }
