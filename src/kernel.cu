@@ -12,8 +12,13 @@ feedKernel(const double *pN, const double *b, const double *w, double *r, double
         sum += pN[i] * w[id * cols + i];
     }
     rR[id] = sum + b[id];
-    if (fn == 0) r[id] = (1.0 / (1.0 + exp(-(double) rR[id])));
-    else if (fn == 1) r[id] = rR[id] > 0 ? rR[id] : 0;
+    if (fn == 0) {
+        double sig;
+        if (rR[id] >= 30) sig = 1;
+        else if (rR[id] <= -30) sig = 0;
+        else sig = (1.0 / (1.0 + exp(-(double) rR[id])));
+        r[id] = sig;
+    } else if (fn == 1) r[id] = rR[id] > 0 ? rR[id] : 0;
 }
 
 __global__ void initRandomKernel(double *b, double *w, int rows, int cols, int seed, bool last) {
@@ -42,7 +47,10 @@ doBackpropagationKernel(const double *neuron, const double *rawNeuron, const dou
         for (int i = 0; i < cols; ++i) {
             double localError = deltaError[id];
             if (fn == 0) {
-                double sig = (1.0 / (1.0 + exp(-(double) rawSource[i])));
+                double sig;
+                if (rawSource[i] >= 30) sig = 1;
+                else if (rawSource[i] <= -30) sig = 0;
+                else sig = (1.0 / (1.0 + exp(-(double) rawSource[i])));
                 localError *= sig * (1.0 - sig);
             } else if (fn == 1) {
                 localError *= (rawSource[i] >= 0.0 ? 1.0 : 0.0);
@@ -56,7 +64,10 @@ doBackpropagationKernel(const double *neuron, const double *rawNeuron, const dou
         for (int j = 0; j < nextNeurons; ++j) {
             double activatedDer = 0;
             if (fn == 0) {
-                double sig = (1.0 / (1.0 + exp(-(double) rawSource[id])));
+                double sig;
+                if (rawSource[id] >= 30) sig = 1;
+                else if (rawSource[id] <= -30) sig = 0;
+                else sig = (1.0 / (1.0 + exp(-(double) rawSource[id])));
                 activatedDer = sig * (1 - sig);
             } else if (fn == 1) {
                 activatedDer = (rawNeuron[id] >= 0 ? 1 : 0);
@@ -66,10 +77,14 @@ doBackpropagationKernel(const double *neuron, const double *rawNeuron, const dou
         deltaError[id] = sum;
         double localError = deltaError[id];
         if (fn == 0) {
-            double sig = (1.0 / (1.0 + exp(-(double) rawSource[id])));
+            double sig;
+            if (rawSource[id] >= 30) sig = 1;
+            else if (rawSource[id] <= -30) sig = 0;
+            else sig = (1.0 / (1.0 + exp(-(double) rawSource[id])));
             localError *= sig * (1.0 - sig);
         } else if (fn == 1) {
-            localError *= (rawSource[id] >= 0 ? 1 : 0);
+            double relu = rawSource[id] > 0 ? rawSource[id] : 0;
+            localError *= (relu >= 0 ? 1 : 0);
         }
         bias[id] -= learningRate * localError;
         for (int i = 0; i < rows; ++i) {

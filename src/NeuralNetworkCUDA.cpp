@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "NeuralNetworkCUDA.h"
 
 NeuralNetworkCUDA::NeuralNetworkCUDA(Layers layers, ActivationFn activationFn) {
@@ -14,6 +15,11 @@ NeuralNetworkCUDA::NeuralNetworkCUDA(Layers layers, ActivationFn activationFn) {
     }
     network.activation = activationType;
     initRandom();
+}
+
+NeuralNetworkCUDA::NeuralNetworkCUDA(const std::string &filename) {
+    this->filename = filename;
+
 }
 
 std::vector<double> NeuralNetworkCUDA::feed(const std::vector<double> &input) {
@@ -47,8 +53,12 @@ void NeuralNetworkCUDA::initRandom() {
 }
 
 void NeuralNetworkCUDA::train(const TrainData &data, unsigned int iterations, double learningRate) {
+    double progress;
     for (int i = 0; i < iterations; ++i) {
+        progress = (double) i * 100 / iterations;
+        std::cout << "\r" << std::fixed << std::setprecision(2) << progress;
         kernel k;
         k.doTraining(network, data, learningRate);
     }
+    std::cout << "\n";
 }

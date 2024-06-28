@@ -11,7 +11,7 @@ class NeuralNetworkCUDA {
 public:
     explicit NeuralNetworkCUDA(Layers layers, ActivationFn activationFn);
 
-    //explicit NeuralNetworkCUDA(const std::string &filename);
+    explicit NeuralNetworkCUDA(const std::string &filename);
 
     std::vector<double> feed(const std::vector<double> &input);
 
