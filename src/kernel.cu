@@ -17,6 +17,7 @@ feedKernel(const double *pN, const double *b, const double *w, double *r, double
         if (rR[id] >= 30) sig = 1;
         else if (rR[id] <= -30) sig = 0;
         else sig = (1.0 / (1.0 + exp(-(double) rR[id])));
+        if (abs(sig) <= 0.00001) sig = 0;
         r[id] = sig;
     } else if (fn == 1) r[id] = rR[id] > 0 ? rR[id] : 0;
 }
@@ -51,6 +52,7 @@ doBackpropagationKernel(const double *neuron, const double *rawNeuron, const dou
                 if (rawSource[i] >= 30) sig = 1;
                 else if (rawSource[i] <= -30) sig = 0;
                 else sig = (1.0 / (1.0 + exp(-(double) rawSource[i])));
+                if (abs(sig) <= 0.00001) sig = 0;
                 localError *= sig * (1.0 - sig);
             } else if (fn == 1) {
                 localError *= (rawSource[i] >= 0.0 ? 1.0 : 0.0);
@@ -68,6 +70,7 @@ doBackpropagationKernel(const double *neuron, const double *rawNeuron, const dou
                 if (rawSource[id] >= 30) sig = 1;
                 else if (rawSource[id] <= -30) sig = 0;
                 else sig = (1.0 / (1.0 + exp(-(double) rawSource[id])));
+                if (abs(sig) <= 0.00001) sig = 0;
                 activatedDer = sig * (1 - sig);
             } else if (fn == 1) {
                 activatedDer = (rawNeuron[id] >= 0 ? 1 : 0);
@@ -81,6 +84,7 @@ doBackpropagationKernel(const double *neuron, const double *rawNeuron, const dou
             if (rawSource[id] >= 30) sig = 1;
             else if (rawSource[id] <= -30) sig = 0;
             else sig = (1.0 / (1.0 + exp(-(double) rawSource[id])));
+            if (abs(sig) <= 0.00001) sig = 0;
             localError *= sig * (1.0 - sig);
         } else if (fn == 1) {
             double relu = rawSource[id] > 0 ? rawSource[id] : 0;
@@ -216,7 +220,7 @@ void kernel::doBackpropagation(Network &network, double learningRate, double *re
     cudaFree(deltaErrorNext);
 }
 
-void kernel::doTraining(Network &network, TrainData data, double learningRate) {
+void kernel::doTraining(Network &network, TrainData &data, double learningRate) {
     for (int i = 0; i < data.data_size; ++i) {
         for (int j = 0; j < data.image[i].image_size; ++j) {
             network.layer[0].neuron[j] = data.image[i].image[j];

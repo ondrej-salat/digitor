@@ -11,9 +11,9 @@ public:
 
     void initNetwork(Network &network, int seed);
 
-    void doTraining(Network &network, TrainData data, double learningRate);
+    void doTraining(Network &network, TrainData &data, double learningRate);
 
-    void doBackpropagation(Network &network, double learningRate, double* result);
+    void doBackpropagation(Network &network, double learningRate, double *result);
 
 };
 
