@@ -2,25 +2,37 @@
 #define DIGITOR_NEURALNETWORKCUDA_H
 
 #include <vector>
+#include <iomanip>
+#include "nlohmann/json.hpp"
 #include <random>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include "kernel.h"
 
 
 class NeuralNetworkCUDA {
 public:
-    explicit NeuralNetworkCUDA(Layers layers, ActivationFn activationFn);
+    explicit NeuralNetworkCUDA(Layers &layers, ActivationFn activationFn);
 
     explicit NeuralNetworkCUDA(const std::string &filename);
 
     std::vector<double> feed(const std::vector<double> &input);
 
-    void train(const TrainData &data, unsigned int iterations, double learningRate);
+    void train(TrainData &data, unsigned int iterations, double learningRate);
+
+    Layers layers{};
 
 private:
     void feedForward();
 
     void initRandom();
+
+    void initJsonFile();
+
+    void writeJson();
+
+    nlohmann::json readJsonFile();
 
     int activationType{};
     std::string filename;

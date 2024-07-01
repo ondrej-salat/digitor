@@ -1,7 +1,9 @@
-#include <iomanip>
 #include "NeuralNetworkCUDA.h"
 
-NeuralNetworkCUDA::NeuralNetworkCUDA(Layers layers, ActivationFn activationFn) {
+using json = nlohmann::json;
+
+NeuralNetworkCUDA::NeuralNetworkCUDA(Layers &layers, ActivationFn activationFn) {
+    layers = layers;
     activationType = activationFn;
     this->network.network_size = layers.layer_size;
     network.allocateMemory();
@@ -15,10 +17,30 @@ NeuralNetworkCUDA::NeuralNetworkCUDA(Layers layers, ActivationFn activationFn) {
     }
     network.activation = activationType;
     initRandom();
+    initJsonFile();
 }
 
 NeuralNetworkCUDA::NeuralNetworkCUDA(const std::string &filename) {
     this->filename = filename;
+    json data = readJsonFile();
+    activationType = data["activation"];
+    network.network_size = data["networkSize"];
+    network.allocateMemory();
+    layers.layer_size = network.network_size;
+    layers.allocateMemory();
+    for (int i = 0; i < network.network_size; ++i) {
+        network.layer[i].neurons = data["layer"][i]["neurons"];
+        layers.layer[i] = network.layer[i].neurons;
+        network.layer[i].prevNeurons = data["layer"][i]["prevNeurons"];
+        network.layer[i].allocateMemory();
+        for (int j = 0; j < network.layer[i].neurons; ++j) {
+            network.layer[i].bias[j] = data["layer"][i]["bias"][j];
+            for (int k = 0; k < network.layer[i].prevNeurons; ++k) {
+                network.layer[i].weight[j * network.layer[i].prevNeurons + k] = data["layer"][i]["weight"][
+                        j * network.layer[i].prevNeurons + k];
+            }
+        }
+    }
 
 }
 
@@ -52,7 +74,7 @@ void NeuralNetworkCUDA::initRandom() {
     k.initNetwork(network, (int) dis(gen));
 }
 
-void NeuralNetworkCUDA::train(const TrainData &data, unsigned int iterations, double learningRate) {
+void NeuralNetworkCUDA::train(TrainData &data, unsigned int iterations, double learningRate) {
     double progress;
     for (int i = 0; i < iterations; ++i) {
         progress = (double) i * 100 / iterations;
@@ -61,4 +83,54 @@ void NeuralNetworkCUDA::train(const TrainData &data, unsigned int iterations, do
         k.doTraining(network, data, learningRate);
     }
     std::cout << "\n";
+}
+
+nlohmann::json NeuralNetworkCUDA::readJsonFile() {
+    std::ifstream jFile(filename);
+    if (!jFile.is_open()) {
+        std::cerr << "Failed to open the JSON file." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    std::string jsonString((std::istreambuf_iterator<char>(jFile)), std::istreambuf_iterator<char>());
+    jFile.close();
+    return json::parse(jsonString);
+}
+
+void NeuralNetworkCUDA::initJsonFile() {
+    std::string file;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1.0);
+    file += "network_s" + std::to_string(network.network_size) + "_i" +
+            std::to_string((int) round(dis(gen) * 10000)) +
+            ".json";
+    std::ofstream output_file(file);
+    filename = file;
+    writeJson();
+}
+
+void NeuralNetworkCUDA::writeJson() {
+    std::ofstream output_file(filename);
+    if (output_file.is_open()) {
+        json data;
+        data["activation"] = activationType;
+        data["networkSize"] = network.network_size;
+        for (int i = 0; i < network.network_size; ++i) {
+            data["layer"][i]["neurons"] = network.layer[i].neurons;
+            data["layer"][i]["prevNeurons"] = network.layer[i].prevNeurons;
+            for (int j = 0; j < network.layer[i].neurons; ++j) {
+                data["layer"][i]["bias"][j] = network.layer[i].bias[j];
+                for (int k = 0; k < network.layer[i].prevNeurons; ++k) {
+                    data["layer"][i]["weight"][j * network.layer[i].prevNeurons + k] = network.layer[i].weight[
+                            j * network.layer[i].prevNeurons + k];
+                }
+            }
+        }
+        std::string stringData = data.dump(2);
+        output_file << stringData;
+        output_file.close();
+        std::cout << "JSON saved to '" << filename << "'" << std::endl;
+    } else {
+        std::cerr << "Failed to open the output file." << std::endl;
+    }
 }
